@@ -15,6 +15,12 @@ public class AssetExportCollection<T> : ExportCollection where T : IUnityObjectB
 	public override bool Export(IExportContainer container, string projectDirectory, FileSystem fileSystem)
 	{
 		string subPath = fileSystem.Path.Join(projectDirectory, FileSystem.FixInvalidPathCharacters(Asset.GetBestDirectory()));
+
+		if (Asset.ClassName == "AnimationClip") {
+			string uniqueFolderName = GetUniqueFolderName(subPath, Asset.GetBestName(), fileSystem);
+			subPath = fileSystem.Path.Join(subPath, uniqueFolderName);
+		}
+
 		string fileName = GetUniqueFileName(Asset, subPath, fileSystem);
 
 		fileSystem.Directory.Create(subPath);
@@ -28,6 +34,27 @@ public class AssetExportCollection<T> : ExportCollection where T : IUnityObjectB
 			return true;
 		}
 		return false;
+	}
+
+	private static string GetUniqueFolderName(string dirPath, string folderName, FileSystem fileSystem)  
+	{  
+		string baseFolderPath = fileSystem.Path.Join(dirPath, folderName);  
+		
+		if (!fileSystem.Directory.Exists(baseFolderPath))  
+		{  
+			return folderName;  
+		}  
+	
+		for (int counter = 1; counter < int.MaxValue; counter++)  
+		{  
+			string proposedName = $"{folderName}_{counter}";  
+			string proposedPath = fileSystem.Path.Join(dirPath, proposedName);  
+			if (!fileSystem.Directory.Exists(proposedPath))  
+			{  
+				return proposedName;  
+			}  
+		}  
+		throw new Exception($"Can't generate unique folder name for {folderName} in directory {dirPath}");  
 	}
 
 	public override bool Contains(IUnityObjectBase asset)
